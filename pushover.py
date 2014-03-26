@@ -80,6 +80,26 @@ class PushOverMessage(object):
         else:
             return None
 
+def _valid_url_(candidate):
+    """
+    url validator function
+    """
+    regex = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
+    if (regex.match(candidate) is not None):
+        return True
+    else:
+        return False
+
+def _valid_auth_(candicate):
+    """
+    proxy auth settings validator function
+    """
+    regex = re.compile(r"^[a-z]{1,128}?:[a-z]{1,128}$")
+    if (regex.match(candidate) is not None):
+        return True
+    else:
+        return False
+
 def main():
     """
     CommandLine Interface
@@ -126,7 +146,7 @@ def main():
 
     try:
         if (    commend_line_arguments.proxy is not None
-            and re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+").match(commend_line_arguments.proxy) is not None):
+            and _valid_url_(commend_line_arguments.proxy)):
                 proxy_enabled = True
                 proxy_protocol = commend_line_arguments.proxy.split(':')[0]
                 proxy_host = commend_line_arguments.proxy.split('//')[1].split(':')[0]
@@ -134,7 +154,7 @@ def main():
                 proxy_settings = {'host' : ''.join([proxy_protocol, '://', proxy_host]),
                                   'port' : proxy_port}
                 if (    commend_line_arguments.proxy_auth is not None
-                    and re.compile(r"^[a-z]{1,128}?:[a-z]{1,128}$").match(commend_line_arguments.proxy_auth) is not None):
+                    and _valid_auth_(commend_line_arguments.proxy_auth)):
                     proxy_settings['user'] = commend_line_arguments.proxy_auth.split(':')[0]
                     proxy_settings['pass'] = commend_line_arguments.proxy_auth.split(':')[1]
         elif (config_file.get('proxy','host') != ''):
