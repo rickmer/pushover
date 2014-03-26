@@ -2,7 +2,7 @@
 """
 Pushover API module and command line tool
 """
-from urllib2 import Request, urlopen, HTTPError, URLError, build_opener, ProxyBasicAuthHandler, ProxyHandler, install_opener
+from urllib2 import Request, HTTPError, URLError, build_opener, ProxyBasicAuthHandler, ProxyHandler, install_opener
 from urllib import urlencode
 from json import loads
 from argparse import ArgumentParser
@@ -41,22 +41,22 @@ class PushOverMessage(object):
             and 'host' in proxy_settings
             and 'port' in proxy_settings):
             proxy_handler = ProxyHandler( { 'https' : ':'.join([proxy_settings['host'], proxy_settings['port']])} )
-            
-            if (    'user' in proxy_settings 
+
+            if (    'user' in proxy_settings
                 and 'pass' in proxy_settings):
                 proxy_auth_handler = ProxyBasicAuthHandler()
                 proxy_auth_handler.add_password('',
-                                                ':'.join([proxy_settings['host'], proxy_settings['port']]), 
-                                                proxy_settings['user'], 
+                                                ':'.join([proxy_settings['host'], proxy_settings['port']]),
+                                                proxy_settings['user'],
                                                 proxy_settings['pass'])
                 opener = build_opener(proxy_handler, proxy_auth_handler)
             else:
                 opener = build_opener(proxy_handler)
         else:
             opener = build_opener()
-        
+
         install_opener(opener)
-        
+
         try:
             response = opener.open(req)
             json_string = response.read()
@@ -90,7 +90,7 @@ def _valid_url_(candidate):
     else:
         return False
 
-def _valid_auth_(candicate):
+def _valid_auth_(candidate):
     """
     proxy auth settings validator function
     """
@@ -147,16 +147,16 @@ def main():
     try:
         if (    commend_line_arguments.proxy is not None
             and _valid_url_(commend_line_arguments.proxy)):
-                proxy_enabled = True
-                proxy_protocol = commend_line_arguments.proxy.split(':')[0]
-                proxy_host = commend_line_arguments.proxy.split('//')[1].split(':')[0]
-                proxy_port = commend_line_arguments.proxy.split('//')[1].split(':')[1]
-                proxy_settings = {'host' : ''.join([proxy_protocol, '://', proxy_host]),
-                                  'port' : proxy_port}
-                if (    commend_line_arguments.proxy_auth is not None
-                    and _valid_auth_(commend_line_arguments.proxy_auth)):
-                    proxy_settings['user'] = commend_line_arguments.proxy_auth.split(':')[0]
-                    proxy_settings['pass'] = commend_line_arguments.proxy_auth.split(':')[1]
+            proxy_enabled = True
+            proxy_protocol = commend_line_arguments.proxy.split(':')[0]
+            proxy_host = commend_line_arguments.proxy.split('//')[1].split(':')[0]
+            proxy_port = commend_line_arguments.proxy.split('//')[1].split(':')[1]
+            proxy_settings = {'host' : ''.join([proxy_protocol, '://', proxy_host]),
+                              'port' : proxy_port}
+            if (    commend_line_arguments.proxy_auth is not None
+                and _valid_auth_(commend_line_arguments.proxy_auth)):
+                proxy_settings['user'] = commend_line_arguments.proxy_auth.split(':')[0]
+                proxy_settings['pass'] = commend_line_arguments.proxy_auth.split(':')[1]
         elif (config_file.get('proxy','host') != ''):
             proxy_enabled = True
             proxy_host = config_file.get('proxy', 'host')
@@ -166,13 +166,12 @@ def main():
             if (config_file.get('proxy','user') != ''):
                 proxy_settings['user'] = config_file.get('proxy', 'user')
                 proxy_settings['pass'] = config_file.get('proxy', 'pass')
-        else: 
+        else:
             exit('Error: proxy configuration string malformed.')
     except ConfigParserError:
         exit('Error: ConfigFile is malformed')
 
     values = {}
-
     optinal_value_keys = ['title',
                           'url',
                           'url_title',
@@ -190,7 +189,7 @@ def main():
             values[key] = arg_value
         elif (cfg_value != ''):
             values[key] = cfg_value
-    
+
     pushover_message = PushOverMessage(api_token, user_token, commend_line_arguments.msg)
     if (proxy_enabled):
         pushover_message.send(values, commend_line_arguments.verbose, proxy_settings)
