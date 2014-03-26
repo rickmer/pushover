@@ -1,0 +1,11 @@
+[pushover_api]
+apitoken=
+usertoken=
+[defaults]
+title=
+device=
+url=
+url_title=
+priority=
+timestamp=
+sound=
