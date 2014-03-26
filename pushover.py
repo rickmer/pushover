@@ -124,22 +124,32 @@ def main():
     except ConfigParserError:
         exit('Error: ConfigFile is malformed')
 
-    if (    commend_line_arguments.proxy is not None
-        and re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+").match(commend_line_arguments.proxy) is not None):
+    try:
+        if (    commend_line_arguments.proxy is not None
+            and re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+").match(commend_line_arguments.proxy) is not None):
+                proxy_enabled = True
+                proxy_protocol = commend_line_arguments.proxy.split(':')[0]
+                proxy_host = commend_line_arguments.proxy.split('//')[1].split(':')[0]
+                proxy_port = commend_line_arguments.proxy.split('//')[1].split(':')[1]
+                proxy_settings = {'host' : ''.join([proxy_protocol, '://', proxy_host]),
+                                  'port' : proxy_port}
+                if (    commend_line_arguments.proxy_auth is not None
+                    and re.compile(r"^[a-z]{1,128}?:[a-z]{1,128}$").match(commend_line_arguments.proxy_auth) is not None):
+                    proxy_settings['user'] = commend_line_arguments.proxy_auth.split(':')[0]
+                    proxy_settings['pass'] = commend_line_arguments.proxy_auth.split(':')[1]
+        elif (config_file.get('proxy','host') != ''):
             proxy_enabled = True
-            proxy_protocol = commend_line_arguments.proxy.split(':')[0]
-            proxy_host = commend_line_arguments.proxy.split('//')[1].split(':')[0]
-            proxy_port = commend_line_arguments.proxy.split('//')[1].split(':')[1]
-            proxy_settings = {'host' : ''.join([proxy_protocol, '://', proxy_host]),
+            proxy_host = config_file.get('proxy', 'host')
+            proxy_port = config_file.get('proxy', 'port')
+            proxy_settings = {'host' : proxy_host,
                               'port' : proxy_port}
-            if (    commend_line_arguments.proxy_auth is not None
-                and re.compile(r"^[a-z]{1,128}?:[a-z]{1,128}$").match(commend_line_arguments.proxy_auth) is not None):
-                proxy_settings['user'] = commend_line_arguments.proxy_auth.split(':')[0]
-                proxy_settings['pass'] = commend_line_arguments.proxy_auth.split(':')[1]
-    elif (False):
-        pass
-    else: 
-        exit('Error: proxy configuration string malformed.')
+            if (config_file.get('proxy','user') != ''):
+                proxy_settings['user'] = config_file.get('proxy', 'user')
+                proxy_settings['pass'] = config_file.get('proxy', 'pass')
+        else: 
+            exit('Error: proxy configuration string malformed.')
+    except ConfigParserError:
+        exit('Error: ConfigFile is malformed')
 
     values = {}
 

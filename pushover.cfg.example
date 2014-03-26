@@ -9,3 +9,8 @@ url_title=
 priority=
 timestamp=
 sound=
+[proxy]
+host=
+port=
+user=
+pass=
