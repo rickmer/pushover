@@ -105,14 +105,14 @@ def main():
 
     for key in optinal_value_keys:
         arg_value = vars(commend_line_arguments)[key]
-        cfg_value = config_file.get('defaults', key)
         try:
-            if (arg_value is not None):
-                values[key] = arg_value
-            elif (cfg_value != ''):
-                values[key] = cfg_value
+            cfg_value = config_file.get('defaults', key)
         except ConfigParserError:
-            pass
+            cfg_value = ''
+        if (arg_value is not None):
+            values[key] = arg_value
+        elif (cfg_value != ''):
+            values[key] = cfg_value
 
     pushover_message = PushOverMessage(api_token, user_token, commend_line_arguments.msg)
     pushover_message.send(values, commend_line_arguments.verbose)
