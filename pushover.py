@@ -2,11 +2,12 @@
 """
 Pushover API module and command line tool
 """
-from urllib2 import Request, urlopen, HTTPError, URLError
+from urllib2 import Request, urlopen, HTTPError, URLError, build_opener, ProxyBasicAuthHandler, ProxyHandler, install_opener
 from urllib import urlencode
 from json import loads
 from argparse import ArgumentParser
 from ConfigParser import ConfigParser, Error as ConfigParserError
+import re
 
 class PushOverMessage(object):
     """
@@ -17,20 +18,47 @@ class PushOverMessage(object):
         self.user_token = user_token
         self.msg = msg
 
-    def send(self, optional_values={}, verbose=False):
+    def send(self, optional_values=None, verbose=False, proxy_settings=None):
         """
         Method to submit the message. Optinal Parameters can be added.
         """
+        if (optional_values is None):
+            optional_values = {}
+
         obligate_values = {'token' : self.api_token,
                            'user' : self.user_token,
                            'message' : self.msg }
+
         values = dict(obligate_values.items() + optional_values.items())
+
         url = 'https://api.pushover.net/1/messages.json'
+
         postdata = urlencode(values)
+
         req = Request(url, postdata)
 
+        if (    proxy_settings is not None
+            and 'host' in proxy_settings
+            and 'port' in proxy_settings):
+            proxy_handler = ProxyHandler( { 'https' : ':'.join([proxy_settings['host'], proxy_settings['port']])} )
+            
+            if (    'user' in proxy_settings 
+                and 'pass' in proxy_settings):
+                proxy_auth_handler = ProxyBasicAuthHandler()
+                proxy_auth_handler.add_password('',
+                                                ':'.join([proxy_settings['host'], proxy_settings['port']]), 
+                                                proxy_settings['user'], 
+                                                proxy_settings['pass'])
+                opener = build_opener(proxy_handler, proxy_auth_handler)
+            else:
+                opener = build_opener(proxy_handler)
+        else:
+            opener = build_opener()
+        
+        install_opener(opener)
+        
         try:
-            response = urlopen(req)
+            response = opener.open(req)
             json_string = response.read()
             json_obj = loads(json_string)
             if (verbose):
@@ -67,6 +95,8 @@ def main():
     command_line_argument_parser.add_argument('--priority', type=str)
     command_line_argument_parser.add_argument('--timestamp', type=str)
     command_line_argument_parser.add_argument('--sound', type=str)
+    command_line_argument_parser.add_argument('--proxy', type=str, help='http(s)://proxyserver:port')
+    command_line_argument_parser.add_argument('--proxy_auth', type=str, help='user:pass')
     command_line_argument_parser.add_argument('msg', type=str)
     command_line_argument_parser.add_argument('-v', '--verbose', action='store_true')
     commend_line_arguments = command_line_argument_parser.parse_args()
@@ -94,14 +124,31 @@ def main():
     except ConfigParserError:
         exit('Error: ConfigFile is malformed')
 
+    if (    commend_line_arguments.proxy is not None
+        and re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+").match(commend_line_arguments.proxy) is not None):
+            proxy_enabled = True
+            proxy_protocol = commend_line_arguments.proxy.split(':')[0]
+            proxy_host = commend_line_arguments.proxy.split('//')[1].split(':')[0]
+            proxy_port = commend_line_arguments.proxy.split('//')[1].split(':')[1]
+            proxy_settings = {'host' : ''.join([proxy_protocol, '://', proxy_host]),
+                              'port' : proxy_port}
+            if (    commend_line_arguments.proxy_auth is not None
+                and re.compile(r"^[a-z]{1,128}?:[a-z]{1,128}$").match(commend_line_arguments.proxy_auth) is not None):
+                proxy_settings['user'] = commend_line_arguments.proxy_auth.split(':')[0]
+                proxy_settings['pass'] = commend_line_arguments.proxy_auth.split(':')[1]
+    elif (False):
+        pass
+    else: 
+        exit('Error: proxy configuration string malformed.')
+
     values = {}
 
     optinal_value_keys = ['title',
-                           'url',
-                           'url_title',
-                           'priority',
-                           'timestamp',
-                           'sound']
+                          'url',
+                          'url_title',
+                          'priority',
+                          'timestamp',
+                          'sound']
 
     for key in optinal_value_keys:
         arg_value = vars(commend_line_arguments)[key]
@@ -113,9 +160,12 @@ def main():
             values[key] = arg_value
         elif (cfg_value != ''):
             values[key] = cfg_value
-
+    
     pushover_message = PushOverMessage(api_token, user_token, commend_line_arguments.msg)
-    pushover_message.send(values, commend_line_arguments.verbose)
+    if (proxy_enabled):
+        pushover_message.send(values, commend_line_arguments.verbose, proxy_settings)
+    else:
+        pushover_message.send(values, commend_line_arguments.verbose)
 
 if __name__ == "__main__":
     main()
