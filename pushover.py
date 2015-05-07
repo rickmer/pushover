@@ -101,9 +101,9 @@ def _valid_auth_(candidate):
         return False
 
 
-def main():
+def _parse_cli_():
     """
-    CommandLine Interface
+    parse commandline arguments
     """
     command_line_argument_parser = ArgumentParser(description='Send a Pushover message')
     command_line_argument_parser.add_argument('--configFile', type=str, default='pushover.cfg')
@@ -120,13 +120,27 @@ def main():
     command_line_argument_parser.add_argument('--proxy_auth', type=str, help='user:pass')
     command_line_argument_parser.add_argument('msg', type=str)
     command_line_argument_parser.add_argument('-v', '--verbose', action='store_true')
-    commend_line_arguments = command_line_argument_parser.parse_args()
-    config_file = ConfigParser()
+    return command_line_argument_parser.parse_args()
 
+
+def _parse_cfg_file_(cfg_file):
+    """
+    parse config file
+    """
+    config_file = ConfigParser()
     try:
-        config_file.readfp(open(commend_line_arguments.configFile))
+        config_file.readfp(open(cfg_file))
     except IOError:
         exit('Error: Specified config file was not found or not readable.')
+    return config_file
+
+
+def main():
+    """
+    CommandLine Interface
+    """
+    commend_line_arguments = _parse_cli_()
+    config_file = _parse_cfg_file_(commend_line_arguments.configFile)
 
     try:
         if (commend_line_arguments.apiToken is not None):
