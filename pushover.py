@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 from ConfigParser import ConfigParser, Error as ConfigParserError
 import re
 
+
 class PushOverMessage(object):
     """
     a PushOverMessage
@@ -25,9 +26,9 @@ class PushOverMessage(object):
         if (optional_values is None):
             optional_values = {}
 
-        obligate_values = {'token' : self.api_token,
-                           'user' : self.user_token,
-                           'message' : self.msg }
+        obligate_values = {'token': self.api_token,
+                           'user': self.user_token,
+                           'message': self.msg}
 
         values = dict(obligate_values.items() + optional_values.items())
 
@@ -37,13 +38,10 @@ class PushOverMessage(object):
 
         req = Request(url, postdata)
 
-        if (    proxy_settings is not None
-            and 'host' in proxy_settings
-            and 'port' in proxy_settings):
-            proxy_handler = ProxyHandler( { 'https' : ':'.join([proxy_settings['host'], proxy_settings['port']])} )
+        if (proxy_settings is not None and 'host' in proxy_settings and 'port' in proxy_settings):
+            proxy_handler = ProxyHandler({'https': ':'.join([proxy_settings['host'], proxy_settings['port']])})
 
-            if (    'user' in proxy_settings
-                and 'pass' in proxy_settings):
+            if ('user' in proxy_settings and 'pass' in proxy_settings):
                 proxy_auth_handler = ProxyBasicAuthHandler()
                 proxy_auth_handler.add_password('',
                                                 ':'.join([proxy_settings['host'], proxy_settings['port']]),
@@ -80,6 +78,7 @@ class PushOverMessage(object):
         else:
             return None
 
+
 def _valid_url_(candidate):
     """
     url validator function
@@ -90,6 +89,7 @@ def _valid_url_(candidate):
     else:
         return False
 
+
 def _valid_auth_(candidate):
     """
     proxy auth settings validator function
@@ -99,6 +99,7 @@ def _valid_auth_(candidate):
         return True
     else:
         return False
+
 
 def main():
     """
@@ -130,40 +131,38 @@ def main():
     try:
         if (commend_line_arguments.apiToken is not None):
             api_token = commend_line_arguments.apiToken
-        elif (config_file.get('pushover_api','apitoken') != ''):
-            api_token = config_file.get('pushover_api','apitoken')
+        elif (config_file.get('pushover_api', 'apitoken') != ''):
+            api_token = config_file.get('pushover_api', 'apitoken')
         else:
             exit('Error: No API Token provided.')
 
         if (commend_line_arguments.userToken is not None):
             user_token = commend_line_arguments.userToken
-        elif (config_file.get('pushover_api','usertoken') != ''):
-            user_token = config_file.get('pushover_api','usertoken')
+        elif (config_file.get('pushover_api', 'usertoken') != ''):
+            user_token = config_file.get('pushover_api', 'usertoken')
         else:
             exit('Error No User Token provided.')
     except ConfigParserError:
         exit('Error: ConfigFile is malformed')
 
     try:
-        if (    commend_line_arguments.proxy is not None
-            and _valid_url_(commend_line_arguments.proxy)):
+        if (commend_line_arguments.proxy is not None and _valid_url_(commend_line_arguments.proxy)):
             proxy_enabled = True
             proxy_protocol = commend_line_arguments.proxy.split(':')[0]
             proxy_host = commend_line_arguments.proxy.split('//')[1].split(':')[0]
             proxy_port = commend_line_arguments.proxy.split('//')[1].split(':')[1]
-            proxy_settings = {'host' : ''.join([proxy_protocol, '://', proxy_host]),
-                              'port' : proxy_port}
-            if (    commend_line_arguments.proxy_auth is not None
-                and _valid_auth_(commend_line_arguments.proxy_auth)):
+            proxy_settings = {'host': ''.join([proxy_protocol, '://', proxy_host]),
+                              'port': proxy_port}
+            if (commend_line_arguments.proxy_auth is not None and _valid_auth_(commend_line_arguments.proxy_auth)):
                 proxy_settings['user'] = commend_line_arguments.proxy_auth.split(':')[0]
                 proxy_settings['pass'] = commend_line_arguments.proxy_auth.split(':')[1]
-        elif (config_file.get('proxy','host') != ''):
+        elif (config_file.get('proxy', 'host') != ''):
             proxy_enabled = True
             proxy_host = config_file.get('proxy', 'host')
             proxy_port = config_file.get('proxy', 'port')
-            proxy_settings = {'host' : proxy_host,
-                              'port' : proxy_port}
-            if (config_file.get('proxy','user') != ''):
+            proxy_settings = {'host': proxy_host,
+                              'port': proxy_port}
+            if (config_file.get('proxy', 'user') != ''):
                 proxy_settings['user'] = config_file.get('proxy', 'user')
                 proxy_settings['pass'] = config_file.get('proxy', 'pass')
         else:
