@@ -135,29 +135,46 @@ def _parse_cfg_file_(cfg_file):
     return config_file
 
 
+def _get_api_token_(cli_cmd, cfg_file):
+    """
+    retrieve api token from cli or configfile
+    """
+    try:
+        if (cli_cmd.apiToken is not None):
+            api_token = cli_cmd.apiToken
+        elif (cfg_file.get('pushover_api', 'apitoken') != ''):
+            api_token = cfg_file.get('pushover_api', 'apitoken')
+        else:
+            exit('Error: No API Token provided.')
+    except ConfigParserError:
+        exit('Error: ConfigFile is malformed')
+    return api_token
+
+
+def _get_user_token_(cli_cmd, cfg_file):
+    """
+    retrieve user token from cli or configfile
+    """
+    try:
+        if (cli_cmd.userToken is not None):
+            user_token = cli_cmd.userToken
+        elif (cfg_file.get('pushover_api', 'usertoken') != ''):
+            user_token = cfg_file.get('pushover_api', 'usertoken')
+        else:
+            exit('Error No User Token provided.')
+    except ConfigParserError:
+        exit('Error: ConfigFile is malformed')
+    return user_token
+
+
 def main():
     """
     CommandLine Interface
     """
     commend_line_arguments = _parse_cli_()
     config_file = _parse_cfg_file_(commend_line_arguments.configFile)
-
-    try:
-        if (commend_line_arguments.apiToken is not None):
-            api_token = commend_line_arguments.apiToken
-        elif (config_file.get('pushover_api', 'apitoken') != ''):
-            api_token = config_file.get('pushover_api', 'apitoken')
-        else:
-            exit('Error: No API Token provided.')
-
-        if (commend_line_arguments.userToken is not None):
-            user_token = commend_line_arguments.userToken
-        elif (config_file.get('pushover_api', 'usertoken') != ''):
-            user_token = config_file.get('pushover_api', 'usertoken')
-        else:
-            exit('Error No User Token provided.')
-    except ConfigParserError:
-        exit('Error: ConfigFile is malformed')
+    api_token = _get_api_token_(commend_line_arguments, config_file)
+    user_token = _get_user_token_(commend_line_arguments, config_file)
 
     try:
         if (commend_line_arguments.proxy is not None and _valid_url_(commend_line_arguments.proxy)):
