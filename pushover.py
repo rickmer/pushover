@@ -180,7 +180,7 @@ def main():
                 proxy_settings['user'] = config_file.get('proxy', 'user')
                 proxy_settings['pass'] = config_file.get('proxy', 'pass')
         else:
-            exit('Error: proxy configuration string malformed.')
+            proxy_enabled = False
     except ConfigParserError:
         exit('Error: ConfigFile is malformed')
 
