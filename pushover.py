@@ -167,6 +167,32 @@ def _get_user_token_(cli_cmd, cfg_file):
     return user_token
 
 
+def _get_proxy_settings_(cli_cmd, cfg_file):
+    try:
+        if (cli_cmd.proxy is not None and _valid_url_(cli_cmd.proxy)):
+            proxy_protocol = cli_cmd.proxy.split(':')[0]
+            proxy_host = cli_cmd.proxy.split('//')[1].split(':')[0]
+            proxy_port = cli_cmd.proxy.split('//')[1].split(':')[1]
+            proxy_settings = {'host': ''.join([proxy_protocol, '://', proxy_host]),
+                              'port': proxy_port}
+            if (cli_cmd.proxy_auth is not None and _valid_auth_(cli_cmd.proxy_auth)):
+                proxy_settings['user'] = cli_cmd.proxy_auth.split(':')[0]
+                proxy_settings['pass'] = cli_cmd.proxy_auth.split(':')[1]
+        elif (cfg_file.get('proxy', 'host') != ''):
+            proxy_host = cfg_file.get('proxy', 'host')
+            proxy_port = cfg_file.get('proxy', 'port')
+            proxy_settings = {'host': proxy_host,
+                              'port': proxy_port}
+            if (cfg_file.get('proxy', 'user') != ''):
+                proxy_settings['user'] = cfg_file.get('proxy', 'user')
+                proxy_settings['pass'] = cfg_file.get('proxy', 'pass')
+        else:
+            proxy_settings = {}
+    except ConfigParserError:
+        exit('Error: ConfigFile is malformed')
+    return proxy_settings
+
+
 def main():
     """
     CommandLine Interface
@@ -175,31 +201,7 @@ def main():
     config_file = _parse_cfg_file_(commend_line_arguments.configFile)
     api_token = _get_api_token_(commend_line_arguments, config_file)
     user_token = _get_user_token_(commend_line_arguments, config_file)
-
-    try:
-        if (commend_line_arguments.proxy is not None and _valid_url_(commend_line_arguments.proxy)):
-            proxy_enabled = True
-            proxy_protocol = commend_line_arguments.proxy.split(':')[0]
-            proxy_host = commend_line_arguments.proxy.split('//')[1].split(':')[0]
-            proxy_port = commend_line_arguments.proxy.split('//')[1].split(':')[1]
-            proxy_settings = {'host': ''.join([proxy_protocol, '://', proxy_host]),
-                              'port': proxy_port}
-            if (commend_line_arguments.proxy_auth is not None and _valid_auth_(commend_line_arguments.proxy_auth)):
-                proxy_settings['user'] = commend_line_arguments.proxy_auth.split(':')[0]
-                proxy_settings['pass'] = commend_line_arguments.proxy_auth.split(':')[1]
-        elif (config_file.get('proxy', 'host') != ''):
-            proxy_enabled = True
-            proxy_host = config_file.get('proxy', 'host')
-            proxy_port = config_file.get('proxy', 'port')
-            proxy_settings = {'host': proxy_host,
-                              'port': proxy_port}
-            if (config_file.get('proxy', 'user') != ''):
-                proxy_settings['user'] = config_file.get('proxy', 'user')
-                proxy_settings['pass'] = config_file.get('proxy', 'pass')
-        else:
-            proxy_enabled = False
-    except ConfigParserError:
-        exit('Error: ConfigFile is malformed')
+    proxy_settings = _get_proxy_settings_(commend_line_arguments, config_file)
 
     values = {}
     optinal_value_keys = ['title',
@@ -221,7 +223,7 @@ def main():
             values[key] = cfg_value
 
     pushover_message = PushOverMessage(api_token, user_token, commend_line_arguments.msg)
-    if (proxy_enabled):
+    if (proxy_settings):
         pushover_message.send(values, commend_line_arguments.verbose, proxy_settings)
     else:
         pushover_message.send(values, commend_line_arguments.verbose)
