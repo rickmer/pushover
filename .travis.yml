@@ -1,0 +1,9 @@
+language: python
+python:
+  - "2.7"
+install: 
+  - "pip install -r .requirements"
+  - "pip install ."
+script:
+  - "py.test"
+  - "pylint info6.py --errors-only"

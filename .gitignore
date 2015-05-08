@@ -1,3 +1,11 @@
 *.pyc
 *.cfg
 *.swp
+bin/*
+dist/*
+include/*
+lib/*
+pushover.egg-info/*
+*__pycache__*
+.Python
+MANIFEST
