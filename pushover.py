@@ -109,7 +109,7 @@ def _valid_auth_(candidate):
     """
     proxy auth settings validator function
     """
-    return _validate_regexp_(r"^[a-z]{1,128}?:[a-z]{1,128}$")
+    return _validate_regexp_(candidate, r"^[\w]{1,128}?:[\w]{1,128}$")
 
 
 def _parse_cli_():
