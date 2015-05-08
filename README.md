@@ -1,6 +1,8 @@
+
 pushover
 ========
 
+[![Build Status](https://travis-ci.org/rickmer/pushover.svg)](https://travis-ci.org/rickmer/pushover)
 [![Code Climate](https://codeclimate.com/github/rickmer/pushover/badges/gpa.svg)](https://codeclimate.com/github/rickmer/pushover) 
 
 a pushover module (yet another) and command line tool
