@@ -79,26 +79,29 @@ class PushOverMessage(object):
             return None
 
 
-def _valid_url_(candidate):
+def _validate_regexp_(candidate, pattern):
     """
-    url validator function
+    validator function to match string against regexp pattern
     """
-    regex = re.compile(r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
+    regex = re.compile(pattern)
     if (regex.match(candidate) is not None):
         return True
     else:
         return False
+
+
+def _valid_url_(candidate):
+    """
+    url validator function
+    """
+    return _validate_regexp_(candidate, r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+")
 
 
 def _valid_auth_(candidate):
     """
     proxy auth settings validator function
     """
-    regex = re.compile(r"^[a-z]{1,128}?:[a-z]{1,128}$")
-    if (regex.match(candidate) is not None):
-        return True
-    else:
-        return False
+    return _validate_regexp_(r"^[a-z]{1,128}?:[a-z]{1,128}$")
 
 
 def _parse_cli_():
