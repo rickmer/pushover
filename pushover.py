@@ -18,6 +18,7 @@ class PushOverMessage(object):
         self.api_token = api_token
         self.user_token = user_token
         self.msg = msg
+        self.url = 'https://api.pushover.net/1/messages.json'
 
     def _get_url_opener_(self, proxy_settings):
         """
@@ -39,9 +40,9 @@ class PushOverMessage(object):
             opener = build_opener()
         return opener
 
-    def send(self, optional_values=None, verbose=False, proxy_settings=None):
+    def _get_postdata_(self, optional_values):
         """
-        Method to submit the message. Optinal Parameters can be added.
+        build url encoded postdata string
         """
         if (optional_values is None):
             optional_values = {}
@@ -52,12 +53,13 @@ class PushOverMessage(object):
 
         values = dict(obligate_values.items() + optional_values.items())
 
-        url = 'https://api.pushover.net/1/messages.json'
+        return urlencode(values)
 
-        postdata = urlencode(values)
-
-        req = Request(url, postdata)
-
+    def send(self, optional_values=None, verbose=False, proxy_settings=None):
+        """
+        Method to submit the message. Optinal Parameters can be added.
+        """
+        req = Request(self.url, self._get_postdata_(optional_values))
         opener = self._get_url_opener_(proxy_settings)
         install_opener(opener)
 
