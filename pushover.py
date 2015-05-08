@@ -19,6 +19,26 @@ class PushOverMessage(object):
         self.user_token = user_token
         self.msg = msg
 
+    def _get_url_opener_(self, proxy_settings):
+        """
+        build url opener with correct proxy and auth settings
+        """
+        if (proxy_settings is not None and 'host' in proxy_settings and 'port' in proxy_settings):
+            proxy_handler = ProxyHandler({'https': ':'.join([proxy_settings['host'], proxy_settings['port']])})
+
+            if ('user' in proxy_settings and 'pass' in proxy_settings):
+                proxy_auth_handler = ProxyBasicAuthHandler()
+                proxy_auth_handler.add_password('',
+                                                ':'.join([proxy_settings['host'], proxy_settings['port']]),
+                                                proxy_settings['user'],
+                                                proxy_settings['pass'])
+                opener = build_opener(proxy_handler, proxy_auth_handler)
+            else:
+                opener = build_opener(proxy_handler)
+        else:
+            opener = build_opener()
+        return opener
+
     def send(self, optional_values=None, verbose=False, proxy_settings=None):
         """
         Method to submit the message. Optinal Parameters can be added.
@@ -38,21 +58,7 @@ class PushOverMessage(object):
 
         req = Request(url, postdata)
 
-        if (proxy_settings is not None and 'host' in proxy_settings and 'port' in proxy_settings):
-            proxy_handler = ProxyHandler({'https': ':'.join([proxy_settings['host'], proxy_settings['port']])})
-
-            if ('user' in proxy_settings and 'pass' in proxy_settings):
-                proxy_auth_handler = ProxyBasicAuthHandler()
-                proxy_auth_handler.add_password('',
-                                                ':'.join([proxy_settings['host'], proxy_settings['port']]),
-                                                proxy_settings['user'],
-                                                proxy_settings['pass'])
-                opener = build_opener(proxy_handler, proxy_auth_handler)
-            else:
-                opener = build_opener(proxy_handler)
-        else:
-            opener = build_opener()
-
+        opener = self._get_url_opener_(proxy_settings)
         install_opener(opener)
 
         try:
