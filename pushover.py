@@ -138,36 +138,34 @@ def _parse_cfg_file_(cfg_file):
     return config_file
 
 
-def _get_api_token_(cli_cmd, cfg_file):
+def _get_config_token_(token_type, cli_cmd, cfg_file):
     """
-    retrieve api token from cli or configfile
+    retrieve configuration token from cli or configfile
     """
     try:
-        if (cli_cmd.apiToken is not None):
-            api_token = cli_cmd.apiToken
-        elif (cfg_file.get('pushover_api', 'apitoken') != ''):
-            api_token = cfg_file.get('pushover_api', 'apitoken')
+        if (token_type in vars(cli_cmd)):
+            token = cli_cmd.apiToken
+        elif (cfg_file.get('pushover_api', token_type) != ''):
+            token = cfg_file.get('pushover_api', token_type)
         else:
             exit('Error: No API Token provided.')
     except ConfigParserError:
         exit('Error: ConfigFile is malformed')
-    return api_token
+    return token
+
+
+def _get_api_token_(cli_cmd, cfg_file):
+    """
+    retrieve api token from cli or configfile
+    """
+    return _get_config_token_('apitoken', cli_cmd, cfg_file)
 
 
 def _get_user_token_(cli_cmd, cfg_file):
     """
     retrieve user token from cli or configfile
     """
-    try:
-        if (cli_cmd.userToken is not None):
-            user_token = cli_cmd.userToken
-        elif (cfg_file.get('pushover_api', 'usertoken') != ''):
-            user_token = cfg_file.get('pushover_api', 'usertoken')
-        else:
-            exit('Error No User Token provided.')
-    except ConfigParserError:
-        exit('Error: ConfigFile is malformed')
-    return user_token
+    return _get_config_token_('usertoken', cli_cmd, cfg_file)
 
 
 def _get_proxy_settings_(cli_cmd, cfg_file):
