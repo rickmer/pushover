@@ -193,6 +193,23 @@ def _get_proxy_settings_(cli_cmd, cfg_file):
     return proxy_settings
 
 
+def _get_api_parameters_(cli_cmd, cfg_file):
+    values = {}
+    optinal_value_keys = ['title', 'url', 'url_title', 'priority', 'timestamp', 'sound']
+
+    for key in optinal_value_keys:
+        arg_value = vars(cli_cmd)[key]
+        try:
+            cfg_value = cfg_file.get('defaults', key)
+        except ConfigParserError:
+            cfg_value = ''
+        if (arg_value is not None):
+            values[key] = arg_value
+        elif (cfg_value != ''):
+            values[key] = cfg_value
+    return values
+
+
 def main():
     """
     CommandLine Interface
@@ -202,25 +219,7 @@ def main():
     api_token = _get_api_token_(commend_line_arguments, config_file)
     user_token = _get_user_token_(commend_line_arguments, config_file)
     proxy_settings = _get_proxy_settings_(commend_line_arguments, config_file)
-
-    values = {}
-    optinal_value_keys = ['title',
-                          'url',
-                          'url_title',
-                          'priority',
-                          'timestamp',
-                          'sound']
-
-    for key in optinal_value_keys:
-        arg_value = vars(commend_line_arguments)[key]
-        try:
-            cfg_value = config_file.get('defaults', key)
-        except ConfigParserError:
-            cfg_value = ''
-        if (arg_value is not None):
-            values[key] = arg_value
-        elif (cfg_value != ''):
-            values[key] = cfg_value
+    values = _get_api_parameters_(commend_line_arguments, config_file)
 
     pushover_message = PushOverMessage(api_token, user_token, commend_line_arguments.msg)
     if (proxy_settings):
